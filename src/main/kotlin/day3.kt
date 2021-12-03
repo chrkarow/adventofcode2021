@@ -16,7 +16,8 @@ private fun part1(binaries: List<String>) {
         .joinToString(separator = "")
 
     val epsilonRate = epsilonString.toUShort(2)
-    val gammaRate = epsilonRate.inv().minus(61440.toUShort())
+    val gammaRate = epsilonRate.inv()
+        .minus(61440.toUShort()) // As UShort is 16 Bit, we need to cut the leading 4 bits (1111000000000000 = 61440)
     println(epsilonRate * gammaRate)
 }
 
