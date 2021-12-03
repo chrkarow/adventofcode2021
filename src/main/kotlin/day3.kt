@@ -52,21 +52,12 @@ private fun calculatePart2Metrics(
 }
 
 private fun getMostCommon(input: String): Char {
-    val counts = count(input)
-    return if (counts.first >= counts.second) '1' else '0'
+    val oneCount = input.count { it == '1' }
+    return if (oneCount.toDouble() >= input.length.toDouble() / 2) '1' else '0'
 }
 
 private fun getLeastCommon(input: String): Char {
-    val counts = count(input)
-    return if (counts.first < counts.second) '1' else '0'
+    val oneCount = input.count { it == '1' }
+    return if (oneCount.toDouble() < input.length.toDouble() / 2) '1' else '0'
 }
 
-private fun count(input: String): Pair<Int, Int> {
-    return input.fold(Pair(0, 0)) { acc, i ->
-        if (i == '1') {
-            Pair(acc.first + 1, acc.second)
-        } else {
-            Pair(acc.first, acc.second + 1)
-        }
-    }
-}
