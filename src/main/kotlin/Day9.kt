@@ -9,26 +9,25 @@ data class Point(val x: Int, val y: Int) {
 
 fun main() {
     val heights = File("src/main/resources/day9.txt").readLines()
-        .map { line -> line.split("").filter(String::isNotBlank).map { Pair(it.toInt(), false) }.toTypedArray() }
+        .map { line -> line.split("").filter(String::isNotBlank).map(String::toInt) }
 
     part1(heights = heights)
     part2(heights = heights)
 }
 
-private fun part1(heights: List<Array<Pair<Int, Boolean>>>) {
+private fun part1(heights: List<List<Int>>) {
     val result = getLowPoints(heights)
         .fold(0) { acc, p -> acc + heights.getHeightSafely(p) + 1 }
     println(result)
 }
 
-private fun part2(heights: List<Array<Pair<Int, Boolean>>>) {
+private fun part2(heights: List<List<Int>>) {
     val result = getLowPoints(heights)
         .map {
             scanBasin(
                 startPoint = it,
                 map = heights,
-                currentSize = 0
-            )
+            ).size
         }.sortedDescending()
         .take(3)
         .reduce(Int::times)
@@ -36,24 +35,25 @@ private fun part2(heights: List<Array<Pair<Int, Boolean>>>) {
     println(result)
 }
 
-private fun getLowPoints(heights: List<Array<Pair<Int, Boolean>>>) =
+private fun getLowPoints(heights: List<List<Int>>) =
     heights.indices
         .flatMap { y -> heights[y].indices.map { x -> Point(x = x, y = y) } }
         .filter { isLowPoint(it, heights) }
 
-private fun scanBasin(startPoint: Point, map: List<Array<Pair<Int, Boolean>>>, currentSize: Int): Int {
-    if (map.getHeightSafely(point = startPoint) == 9 || map[startPoint.y][startPoint.x].second) return 0
-    map[startPoint.y][startPoint.x] = Pair(map[startPoint.y][startPoint.x].first, true)
+private fun scanBasin(startPoint: Point, map: List<List<Int>>, currentBasin: Set<Point> = emptySet()): Set<Point> {
+    if (map.getHeightSafely(point = startPoint) == 9 || currentBasin.contains(startPoint)) return currentBasin
 
-    val top = scanBasin(startPoint = startPoint.neighborAbove(), map = map, currentSize = currentSize)
-    val right = scanBasin(startPoint = startPoint.neighborRight(), map = map, currentSize = currentSize)
-    val bottom = scanBasin(startPoint = startPoint.neighborBelow(), map = map, currentSize = currentSize)
-    val left = scanBasin(startPoint = startPoint.neighborLeft(), map = map, currentSize = currentSize)
+    var nextBasin = currentBasin.plus(startPoint)
 
-    return 1 + top + right + bottom + left
+    nextBasin = scanBasin(startPoint = startPoint.neighborAbove(), map = map, currentBasin = nextBasin)
+    nextBasin = scanBasin(startPoint = startPoint.neighborRight(), map = map, currentBasin = nextBasin)
+    nextBasin = scanBasin(startPoint = startPoint.neighborBelow(), map = map, currentBasin = nextBasin)
+    nextBasin = scanBasin(startPoint = startPoint.neighborLeft(), map = map, currentBasin = nextBasin)
+
+    return nextBasin
 }
 
-private fun isLowPoint(point: Point, map: List<Array<Pair<Int, Boolean>>>): Boolean {
+private fun isLowPoint(point: Point, map: List<List<Int>>): Boolean {
     val current = map.getHeightSafely(point = point)
     if (map.getHeightSafely(point = point.neighborAbove()) <= current) return false
     if (map.getHeightSafely(point = point.neighborRight()) <= current) return false
@@ -62,9 +62,9 @@ private fun isLowPoint(point: Point, map: List<Array<Pair<Int, Boolean>>>): Bool
     return true
 }
 
-private fun List<Array<Pair<Int, Boolean>>>.getHeightSafely(point: Point): Int {
+private fun List<List<Int>>.getHeightSafely(point: Point): Int {
     return try {
-        this[point.y][point.x].first
+        this[point.y][point.x]
     } catch (e: IndexOutOfBoundsException) {
         9
     }
