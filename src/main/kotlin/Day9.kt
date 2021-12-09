@@ -1,5 +1,12 @@
 import java.io.File
 
+data class Point(val x: Int, val y: Int) {
+    fun neighborAbove() = Point(x = x, y = y - 1)
+    fun neighborRight() = Point(x = x + 1, y = y)
+    fun neighborBelow() = Point(x = x, y = y + 1)
+    fun neighborLeft() = Point(x = x - 1, y = y)
+}
+
 fun main() {
     val heights = File("src/main/resources/day9.txt").readLines()
         .map { line -> line.split("").filter(String::isNotBlank).map { Pair(it.toInt(), false) }.toTypedArray() }
@@ -9,55 +16,56 @@ fun main() {
 }
 
 private fun part1(heights: List<Array<Pair<Int, Boolean>>>) {
-    var result = 0
-    for (y in heights.indices) {
-        for (x in heights[y].indices) {
-            if (isLowPoint(x, y, heights)) {
-                result += 1 + heights[y][x].first
-            }
-        }
-    }
+    val result = getLowPoints(heights)
+        .fold(0) { acc, p -> acc + heights.getHeightSafely(p) + 1 }
     println(result)
 }
 
 private fun part2(heights: List<Array<Pair<Int, Boolean>>>) {
-    val basinSizes = mutableListOf<Int>()
-    for (y in heights.indices) {
-        for (x in heights[y].indices) {
-            val basinSize = scanBasin(startX = x, startY = y, map = heights, 0)
-            if (basinSize != 0) basinSizes.add(basinSize)
-        }
-    }
-    println(basinSizes.toList().sorted().takeLast(3).reduce(Int::times))
+    val result = getLowPoints(heights)
+        .map {
+            scanBasin(
+                startPoint = it,
+                map = heights,
+                currentSize = 0
+            )
+        }.sortedDescending()
+        .take(3)
+        .reduce(Int::times)
+
+    println(result)
 }
 
-private fun scanBasin(startX: Int, startY: Int, map: List<Array<Pair<Int, Boolean>>>, currentSize: Int): Int {
-    val current = map.gePairSafely(y = startY, x = startX)
-    if (current.first == 9 || current.second) return 0
+private fun getLowPoints(heights: List<Array<Pair<Int, Boolean>>>) =
+    heights.indices
+        .flatMap { y -> heights[y].indices.map { x -> Point(x = x, y = y) } }
+        .filter { isLowPoint(it, heights) }
 
-    map[startY][startX] = Pair(map[startY][startX].first, true)
+private fun scanBasin(startPoint: Point, map: List<Array<Pair<Int, Boolean>>>, currentSize: Int): Int {
+    if (map.getHeightSafely(point = startPoint) == 9 || map[startPoint.y][startPoint.x].second) return 0
+    map[startPoint.y][startPoint.x] = Pair(map[startPoint.y][startPoint.x].first, true)
 
-    val top = scanBasin(startY = startY - 1, startX = startX, map = map, currentSize = currentSize + 1)
-    val right = scanBasin(startY = startY, startX = startX + 1, map = map, currentSize = currentSize + 1)
-    val bottom = scanBasin(startY = startY + 1, startX = startX, map = map, currentSize = currentSize + 1)
-    val left = scanBasin(startY = startY, startX = startX - 1, map = map, currentSize = currentSize + 1)
+    val top = scanBasin(startPoint = startPoint.neighborAbove(), map = map, currentSize = currentSize)
+    val right = scanBasin(startPoint = startPoint.neighborRight(), map = map, currentSize = currentSize)
+    val bottom = scanBasin(startPoint = startPoint.neighborBelow(), map = map, currentSize = currentSize)
+    val left = scanBasin(startPoint = startPoint.neighborLeft(), map = map, currentSize = currentSize)
+
     return 1 + top + right + bottom + left
 }
 
-private fun isLowPoint(startX: Int, startY: Int, map: List<Array<Pair<Int, Boolean>>>): Boolean {
-    val current = map.gePairSafely(y = startY, x = startX).first
-    if (map.gePairSafely(y = startY - 1, x = startX).first <= current) return false
-    if (map.gePairSafely(y = startY, x = startX + 1).first  <= current) return false
-    if (map.gePairSafely(y = startY + 1, x = startX).first  <= current) return false
-    if (map.gePairSafely(y = startY, x = startX - 1).first  <= current) return false
+private fun isLowPoint(point: Point, map: List<Array<Pair<Int, Boolean>>>): Boolean {
+    val current = map.getHeightSafely(point = point)
+    if (map.getHeightSafely(point = point.neighborAbove()) <= current) return false
+    if (map.getHeightSafely(point = point.neighborRight()) <= current) return false
+    if (map.getHeightSafely(point = point.neighborBelow()) <= current) return false
+    if (map.getHeightSafely(point = point.neighborLeft()) <= current) return false
     return true
 }
 
-private fun List<Array<Pair<Int, Boolean>>>.gePairSafely(y: Int, x: Int): Pair<Int, Boolean> {
+private fun List<Array<Pair<Int, Boolean>>>.getHeightSafely(point: Point): Int {
     return try {
-        val line = this[y]
-        line[x]
+        this[point.y][point.x].first
     } catch (e: IndexOutOfBoundsException) {
-        Pair(9, true)
+        9
     }
 }
