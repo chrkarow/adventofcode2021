@@ -59,11 +59,11 @@ fun scanCaveSystem(
     }
 
     val hasDuplicateSmallCave =
-        if (part2) newWay.filter { it.isSmallCave() }.groupingBy { it }.eachCount().any { it.value > 1 } else true
+        !part2 || newWay.filter { it.isSmallCave() }.groupingBy { it }.eachCount().any { it.value > 1 }
 
     return start.connectedTo
         .filter {
-            if (!it.isStart() && (!it.isSmallCave() || !hasDuplicateSmallCave)) true else (!currentWay.contains(it))
+            (!it.isStart() && (!it.isSmallCave() || !hasDuplicateSmallCave)) || !currentWay.contains(it)
         }
         .flatMap {
             scanCaveSystem(
