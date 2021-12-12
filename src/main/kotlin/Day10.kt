@@ -62,7 +62,7 @@ private fun createClosingSequence(chunk: String) =
             if (opening.contains(char)) {
                 acc.plus(char)
             } else {
-                acc.take(acc.size - 1)
+                acc.dropLast(1)
             }
         }
         .reversed()
