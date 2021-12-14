@@ -7,14 +7,14 @@ fun main() {
     val coordinates = lines
         .take(emptyLineIndex)
         .map { it.split(",") }
-        .map { Pair(it[0].toInt(), it[1].toInt()) }
+        .map { it[0].toInt() to it[1].toInt() }
         .toSet()
 
     val foldingInstructions = lines
         .drop(emptyLineIndex + 1)
         .map { it.replaceFirst("fold along ", "") }
         .map { it.split("=") }
-        .map { Pair(it[0], it[1].toInt()) }
+        .map { it[0] to it[1].toInt() }
 
     part1(
         coordinates = coordinates,
@@ -72,7 +72,7 @@ private fun foldUp(
     line: Int
 ) =
     coordinates
-        .map { if (it.second <= line) it else Pair(it.first, line - (it.second - line)) }
+        .map { if (it.second <= line) it else it.first to line - (it.second - line) }
         .toSet()
 
 
@@ -81,6 +81,6 @@ private fun foldLeft(
     col: Int
 ) =
     coordinates
-        .map { if (it.first <= col) it else Pair(col - (it.first - col), it.second) }
+        .map { if (it.first <= col) it else col - (it.first - col) to it.second }
         .toSet()
 
