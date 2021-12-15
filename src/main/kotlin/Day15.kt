@@ -39,17 +39,8 @@ fun main() {
 }
 
 private fun part1(risks: List<List<RiskNode>>) {
-
     assesRisk(risks = risks)
-
-    var predecessor: RiskNode? = risks.last().last()
-    var costs = 0
-    while (predecessor != null) {
-        costs += predecessor.risk
-        predecessor = predecessor.predecessor
-    }
-
-    println(costs)
+    println(risks.last().last().distance)
 }
 
 private fun part2(risks: List<List<RiskNode>>) {
